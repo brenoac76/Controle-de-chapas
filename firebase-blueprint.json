@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "Sheet": {
+      "title": "Sheet",
+      "description": "Chapa metálica em estoque",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "material": { "type": "string" },
+        "quantity": { "type": "number" },
+        "unit": { "type": "string" }
+      },
+      "required": ["name", "material", "quantity"]
+    },
+    "Client": {
+      "title": "Client",
+      "description": "Cliente",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "Supplier": {
+      "title": "Supplier",
+      "description": "Fornecedor",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Movimentação de estoque",
+      "type": "object",
+      "properties": {
+        "sheetId": { "type": "string" },
+        "type": { "type": "string" },
+        "quantity": { "type": "number" },
+        "date": { "type": "string" }
+      },
+      "required": ["sheetId", "type", "quantity", "date"]
+    }
+  },
+  "firestore": {
+    "/sheets/{sheetId}": {
+      "schema": { "$ref": "Sheet" },
+      "description": "Coleção de chapas"
+    },
+    "/clients/{clientId}": {
+      "schema": { "$ref": "Client" },
+      "description": "Coleção de clientes"
+    },
+    "/suppliers/{supplierId}": {
+      "schema": { "$ref": "Supplier" },
+      "description": "Coleção de fornecedores"
+    },
+    "/transactions/{transactionId}": {
+      "schema": { "$ref": "Transaction" },
+      "description": "Coleção de movimentações"
+    }
+  }
+}

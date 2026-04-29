@@ -1,0 +1,6 @@
+{
+  "name": "Sistema de Controle de Estoque de Chapas",
+  "description": "Sistema de controle de estoque de chapas metálicas com cadastro de clientes, fornecedores, controle de entradas/saídas móvel (mobile) e dashboard web para relatórios gerenciais.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
