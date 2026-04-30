@@ -2,10 +2,10 @@ import { Client } from '../types';
 
 interface Props {
   clients: Client[];
-  onDelete: (id: string) => void;
+  onEdit: (client: Client) => void;
 }
 
-export const ClientList = ({ clients, onDelete }: Props) => {
+export const ClientList = ({ clients, onEdit }: Props) => {
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <h2 className="text-lg font-bold text-slate-800 p-6">Clientes</h2>
@@ -14,16 +14,14 @@ export const ClientList = ({ clients, onDelete }: Props) => {
           <thead className="bg-slate-50 text-slate-400 font-bold uppercase text-xs">
             <tr>
               <th className="px-6 py-3">Nome</th>
-              <th className="px-6 py-3 text-right">Ações</th>
+              <th className="px-6 py-3">Cidade</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
             {clients.map(c => (
-              <tr key={c.id} className="hover:bg-slate-50">
-                <td className="px-6 py-3 text-slate-800">{c.name}</td>
-                <td className="px-6 py-3 text-right">
-                  <button onClick={() => onDelete(c.id)} className="text-red-500 hover:text-red-600 text-xs font-bold transition-colors">Excluir</button>
-                </td>
+              <tr key={c.id} onClick={() => onEdit(c)} className="hover:bg-slate-50 cursor-pointer transition-colors">
+                <td className="px-6 py-3 text-slate-800 font-medium">{c.name}</td>
+                <td className="px-6 py-3 text-slate-600">{c.city || '-'}</td>
               </tr>
             ))}
           </tbody>

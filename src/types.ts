@@ -15,6 +15,7 @@ export interface Sheet {
 export interface Client {
   id: string;
   name: string;
+  city?: string;
 }
 
 export interface Supplier {

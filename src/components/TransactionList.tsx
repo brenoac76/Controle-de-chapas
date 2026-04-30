@@ -83,7 +83,13 @@ export const TransactionList = ({ transactions, sheets, clients, suppliers, onDe
                         <td className="px-4 py-3 text-slate-600">{getClientName(t.sourceClientId)}</td>
                         <td className="px-4 py-3 text-slate-600">{getClientName(t.destinationClientId)}</td>
                         <td className="px-4 py-3">
-                          <button onClick={() => onDelete(t.id)} className="text-red-500 text-xs font-bold hover:text-red-600 transition-colors">Excluir</button>
+                          <button onClick={async () => {
+                            try {
+                              await onDelete(t.id);
+                            } catch (e: any) {
+                              alert(e.message);
+                            }
+                          }} className="text-red-500 text-xs font-bold hover:text-red-600 transition-colors">Excluir</button>
                         </td>
                       </tr>
                     ))}

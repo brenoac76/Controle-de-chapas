@@ -14,10 +14,13 @@ import { ClientList } from './components/ClientList';
 import { SupplierForm } from './components/SupplierForm';
 import { SupplierList } from './components/SupplierList';
 import { TransactionList } from './components/TransactionList';
+import { Client, Supplier } from './types';
 
 export default function App() {
   const [activeView, setActiveView] = useState('dashboard');
   const [showForm, setShowForm] = useState<string | null>(null);
+  const [editingClient, setEditingClient] = useState<Client | undefined>(undefined);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | undefined>(undefined);
   const { sheets, transactions, clients, suppliers, deleteSheet, deleteTransaction, deleteClient, deleteSupplier } = useStockState();
 
   const MENU_ITEMS = [
@@ -28,11 +31,17 @@ export default function App() {
     { id: 'suppliers', name: 'Fornecedores', icon: Building2 },
   ];
 
+  const handleCloseForm = () => {
+    setShowForm(null);
+    setEditingClient(undefined);
+    setEditingSupplier(undefined);
+  };
+
   const renderContent = () => {
-    if (showForm === 'sheet') return <SheetForm onClose={() => setShowForm(null)} />;
-    if (showForm === 'transaction') return <TransactionForm onClose={() => setShowForm(null)} />;
-    if (showForm === 'client') return <ClientForm onClose={() => setShowForm(null)} />;
-    if (showForm === 'supplier') return <SupplierForm onClose={() => setShowForm(null)} />;
+    if (showForm === 'sheet') return <SheetForm onClose={handleCloseForm} />;
+    if (showForm === 'transaction') return <TransactionForm onClose={handleCloseForm} />;
+    if (showForm === 'client') return <ClientForm onClose={handleCloseForm} initialClient={editingClient} onDelete={editingClient ? () => deleteClient(editingClient.id) : undefined} />;
+    if (showForm === 'supplier') return <SupplierForm onClose={handleCloseForm} initialSupplier={editingSupplier} onDelete={editingSupplier ? () => deleteSupplier(editingSupplier.id) : undefined} />;
     
     switch (activeView) {
       case 'stock':
@@ -40,9 +49,9 @@ export default function App() {
       case 'transactions':
         return <TransactionList transactions={transactions} sheets={sheets} clients={clients} suppliers={suppliers} onDelete={deleteTransaction} />;
       case 'clients':
-        return <ClientList clients={clients} onDelete={deleteClient} />;
+        return <ClientList clients={clients} onEdit={(c) => { setEditingClient(c); setShowForm('client'); }} />;
       case 'suppliers':
-        return <SupplierList suppliers={suppliers} onDelete={deleteSupplier} />;
+        return <SupplierList suppliers={suppliers} onEdit={(s) => { setEditingSupplier(s); setShowForm('supplier'); }} />;
       default: {
         const thicknessCounts = sheets.reduce((acc, sheet) => {
           acc[sheet.thickness] = (acc[sheet.thickness] || 0) + sheet.quantity;
@@ -125,7 +134,7 @@ export default function App() {
           {MENU_ITEMS.map((item) => (
             <button
               key={item.id}
-              onClick={() => { setActiveView(item.id); setShowForm(null); }}
+              onClick={() => { setActiveView(item.id); handleCloseForm(); }}
               className={`flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-2 rounded-md text-xs md:text-sm font-medium whitespace-nowrap ${activeView === item.id ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
             >
               <item.icon size={16} className="md:w-[18px] md:h-[18px]" />

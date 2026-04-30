@@ -80,6 +80,22 @@ export const useStockState = () => {
     }
   };
 
+  const updateClient = async (id: string, updates: Partial<Client>) => {
+    try {
+      await updateDoc(doc(db, 'clients', id), updates);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'clients');
+    }
+  };
+
+  const updateSupplier = async (id: string, updates: Partial<Supplier>) => {
+    try {
+      await updateDoc(doc(db, 'suppliers', id), updates);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'suppliers');
+    }
+  };
+
   const deleteDocument = async (collectionName: string, id: string) => {
     try {
       await deleteDoc(doc(db, collectionName, id));
@@ -91,16 +107,28 @@ export const useStockState = () => {
   return { 
     sheets, transactions, clients, suppliers, 
     addSheet, addTransaction, addClient, addSupplier,
+    updateClient, updateSupplier,
     deleteSheet: async (id: string) => {
-      await deleteDocument('sheets', id);
       const relatedTransactions = transactions.filter(t => t.sheetId === id);
-      for (const t of relatedTransactions) {
-        await deleteDocument('transactions', t.id);
+      if (relatedTransactions.length > 0) {
+        throw new Error('Não é possível excluir: existem movimentações vinculadas a esta chapa.');
       }
+      await deleteDocument('sheets', id);
     },
     deleteTransaction: async (id: string) => {
       const t = transactions.find(t => t.id === id);
       if (t) {
+        if (t.type === 'entry') {
+          const hasExits = transactions.some(other => 
+            (other.type === 'exit' || other.type === 'partial_usage') && 
+            other.sheetId === t.sheetId &&
+            other.sourceClientId === t.destinationClientId &&
+            (other.orderNumber === t.orderNumber || !t.orderNumber || !other.orderNumber)
+          );
+          if (hasExits) {
+            throw new Error('Não é possível excluir: existem movimentações de saída vinculadas a esta entrada.');
+          }
+        }
         try {
           const sheetRef = doc(db, 'sheets', t.sheetId);
           const qtyChange = t.type === 'entry' ? -t.quantity : t.quantity;
@@ -111,7 +139,19 @@ export const useStockState = () => {
       }
       await deleteDocument('transactions', id);
     },
-    deleteClient: (id: string) => deleteDocument('clients', id),
-    deleteSupplier: (id: string) => deleteDocument('suppliers', id)
+    deleteClient: async (id: string) => {
+      const relatedTransactions = transactions.filter(t => t.sourceClientId === id || t.destinationClientId === id);
+      if (relatedTransactions.length > 0) {
+        throw new Error('Não é possível excluir: existem movimentações vinculadas a este cliente.');
+      }
+      await deleteDocument('clients', id);
+    },
+    deleteSupplier: async (id: string) => {
+      const relatedTransactions = transactions.filter(t => t.supplierId === id);
+      if (relatedTransactions.length > 0) {
+        throw new Error('Não é possível excluir: existem movimentações vinculadas a este fornecedor.');
+      }
+      await deleteDocument('suppliers', id);
+    }
   };
 };

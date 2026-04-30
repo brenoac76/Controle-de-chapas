@@ -2,10 +2,10 @@ import { Supplier } from '../types';
 
 interface Props {
   suppliers: Supplier[];
-  onDelete: (id: string) => void;
+  onEdit: (supplier: Supplier) => void;
 }
 
-export const SupplierList = ({ suppliers, onDelete }: Props) => {
+export const SupplierList = ({ suppliers, onEdit }: Props) => {
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <h2 className="text-lg font-bold text-slate-800 p-6">Fornecedores</h2>
@@ -14,16 +14,12 @@ export const SupplierList = ({ suppliers, onDelete }: Props) => {
           <thead className="bg-slate-50 text-slate-400 font-bold uppercase text-xs">
             <tr>
               <th className="px-6 py-3">Nome</th>
-              <th className="px-6 py-3 text-right">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
             {suppliers.map(s => (
-              <tr key={s.id} className="hover:bg-slate-50">
-                <td className="px-6 py-3 text-slate-800">{s.name}</td>
-                <td className="px-6 py-3 text-right">
-                  <button onClick={() => onDelete(s.id)} className="text-red-500 hover:text-red-600 text-xs font-bold transition-colors">Excluir</button>
-                </td>
+              <tr key={s.id} onClick={() => onEdit(s)} className="hover:bg-slate-50 cursor-pointer transition-colors">
+                <td className="px-6 py-3 text-slate-800 font-medium">{s.name}</td>
               </tr>
             ))}
           </tbody>
