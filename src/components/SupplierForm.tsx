@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStockState } from '../hooks/useStockState';
+import { toast } from './Toast';
 
 export const SupplierForm = ({ onClose, initialSupplier, onDelete }: { onClose: () => void, initialSupplier?: {id: string, name: string}, onDelete?: () => void }) => {
   const { addSupplier, updateSupplier } = useStockState();
@@ -7,12 +8,18 @@ export const SupplierForm = ({ onClose, initialSupplier, onDelete }: { onClose: 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (initialSupplier) {
-      await updateSupplier(initialSupplier.id, { name });
-    } else {
-      await addSupplier({ id: Date.now().toString(), name });
+    try {
+      if (initialSupplier) {
+        await updateSupplier(initialSupplier.id, { name });
+        toast.success('Fornecedor atualizado com sucesso!');
+      } else {
+        await addSupplier({ id: Date.now().toString(), name });
+        toast.success('Fornecedor cadastrado com sucesso!');
+      }
+      onClose();
+    } catch(e: any) {
+      toast.error('Erro ao salvar fornecedor: ' + e.message);
     }
-    onClose();
   };
 
   const inputStyle = "w-full p-3 border border-slate-100 bg-slate-50/50 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-200 transition-all text-sm";
@@ -27,9 +34,10 @@ export const SupplierForm = ({ onClose, initialSupplier, onDelete }: { onClose: 
             <button type="button" onClick={async () => {
               try {
                 await onDelete();
+                toast.success('Fornecedor excluído com sucesso!');
                 onClose();
               } catch (e: any) {
-                alert(e.message);
+                toast.error(e.message);
               }
             }} className="bg-red-50 text-red-600 p-3 rounded-xl hover:bg-red-100 font-medium transition-colors">Excluir</button>
           )}

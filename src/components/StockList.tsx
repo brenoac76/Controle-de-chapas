@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Sheet, Transaction, Client, Supplier } from '../types';
 import { getClientBalancesByOrder } from '../lib/stockUtils';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Search } from 'lucide-react';
 import { PrintLabelModal } from './PrintLabelModal';
+import { toast } from './Toast';
 
 const SheetDetails = ({ sheet, transactions, clients, suppliers, getClientName, getSupplierName, onPrintLabel, onAddToQueue }: { sheet: Sheet, transactions: Transaction[], clients: Client[], suppliers: Supplier[], getClientName: (id?: string) => string, getSupplierName: (id?: string) => string, onPrintLabel: (data: any[]) => void, onAddToQueue: (data: any) => void }) => {
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
@@ -175,6 +176,25 @@ export const StockList = ({ sheets, transactions, clients, suppliers, onDeleteSh
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [printLabels, setPrintLabels] = useState<any[] | null>(null);
   const [printQueue, setPrintQueue] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+
+  const filteredSheets = useMemo(() => {
+    return [...sheets].filter(sheet => {
+      const searchLower = search.toLowerCase();
+      // Match exactly on name OR match exactly on thickness if it's a number
+      const thicknessStr = sheet.thickness.toString();
+      // Users might type "18mm" or "18"
+      const matchesThickness = thicknessStr === searchLower || `${thicknessStr}mm` === searchLower;
+      const matchesName = sheet.name.toLowerCase().includes(searchLower);
+      
+      // We will allow partial matches on name or exact on thickness to match the requested behaviour
+      return matchesName || sheet.thickness.toString().includes(searchLower);
+    }).sort((a, b) => {
+      const nameCmp = a.name.localeCompare(b.name);
+      if (nameCmp !== 0) return nameCmp;
+      return a.thickness - b.thickness;
+    });
+  }, [sheets, search]);
 
   const handleAddToQueue = (data: any) => {
     setPrintQueue(prev => [...prev, data]);
@@ -185,7 +205,22 @@ export const StockList = ({ sheets, transactions, clients, suppliers, onDeleteSh
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-16">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-16 flex flex-col h-full">
+        <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+          <h2 className="text-lg font-bold text-slate-800">Chapas em Estoque</h2>
+          <div className="relative w-full sm:w-72">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={16} className="text-slate-400" />
+            </div>
+            <input
+              type="text"
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all bg-slate-50/50 focus:bg-white"
+              placeholder="Buscar por nome ou espessura..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm md:min-w-[500px]">
             <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[10px] font-bold text-slate-400 tracking-widest">
@@ -197,11 +232,7 @@ export const StockList = ({ sheets, transactions, clients, suppliers, onDeleteSh
               </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {[...sheets].sort((a, b) => {
-              const nameCmp = a.name.localeCompare(b.name);
-              if (nameCmp !== 0) return nameCmp;
-              return a.thickness - b.thickness;
-            }).map(sheet => {
+            {filteredSheets.map(sheet => {
               const isExpanded = expandedRow === sheet.id;
               return (
               <React.Fragment key={sheet.id}>
@@ -230,6 +261,13 @@ export const StockList = ({ sheets, transactions, clients, suppliers, onDeleteSh
               </React.Fragment>
               );
             })}
+            {filteredSheets.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
+                  {search ? 'Nenhuma chapa encontrada para essa busca.' : 'Nenhuma chapa cadastrada.'}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
         </div>

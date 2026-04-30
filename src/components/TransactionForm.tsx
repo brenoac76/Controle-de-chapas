@@ -3,8 +3,9 @@ import { useStockState } from '../hooks/useStockState';
 import { getClientBalances, getClientBalancesByOrder } from '../lib/stockUtils';
 import { PrintLabelModal } from './PrintLabelModal';
 import { QRScannerModal } from './QRScannerModal';
+import { toast } from './Toast';
 
-export const TransactionForm = ({ onClose }: { onClose: () => void }) => {
+export const TransactionForm = ({ onClose, currentUser }: { onClose: () => void, currentUser: AppUser | null }) => {
   const { addTransaction, sheets, clients, suppliers, transactions } = useStockState();
   const [formData, setFormData] = useState({ 
     sheetId: '', 
@@ -37,11 +38,11 @@ export const TransactionForm = ({ onClose }: { onClose: () => void }) => {
         }));
         setShowQRScanner(false);
       } else {
-        setError('QR Code inválido para saída.');
+        toast.error('QR Code inválido para saída.');
         setShowQRScanner(false);
       }
     } catch(e) {
-      setError('Formato de QR Code desconhecido.');
+      toast.error('Formato de QR Code desconhecido.');
       setShowQRScanner(false);
     }
   };
@@ -59,24 +60,32 @@ export const TransactionForm = ({ onClose }: { onClose: () => void }) => {
       }
     }
 
-    await addTransaction({ 
-      ...formData, 
-      id: Date.now().toString(),
-    });
-    
-    if (formData.type === 'entry' && selectedSheet) {
-      const client = clients.find(c => c.id === formData.destinationClientId);
-      setPrintData({
-        sheetId: selectedSheet.id,
-        sheetName: selectedSheet.name,
-        thickness: selectedSheet.thickness,
-        material: selectedSheet.material,
-        clientId: formData.destinationClientId,
-        clientName: client?.name || 'Desconhecido',
-        orderNumber: formData.orderNumber || 'S/N'
+    try {
+      await addTransaction({ 
+        ...formData, 
+        id: Date.now().toString(),
+        userId: currentUser?.id,
+        userName: currentUser?.name
       });
-    } else {
-      onClose();
+      
+      if (formData.type === 'entry' && selectedSheet) {
+        const client = clients.find(c => c.id === formData.destinationClientId);
+        setPrintData({
+          sheetId: selectedSheet.id,
+          sheetName: selectedSheet.name,
+          thickness: selectedSheet.thickness,
+          material: selectedSheet.material,
+          clientId: formData.destinationClientId,
+          clientName: client?.name || 'Desconhecido',
+          orderNumber: formData.orderNumber || 'S/N'
+        });
+        toast.success('Entrada registrada com sucesso!');
+      } else {
+        toast.success('Movimentação registrada com sucesso!');
+        onClose();
+      }
+    } catch(e: any) {
+      toast.error('Erro ao registrar movimentação: ' + e.message);
     }
   };
 

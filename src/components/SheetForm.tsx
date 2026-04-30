@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStockState } from '../hooks/useStockState';
+import { toast } from './Toast';
 
 export const SheetForm = ({ onClose }: { onClose: () => void }) => {
   const { addSheet, clients, suppliers } = useStockState();
@@ -7,8 +8,13 @@ export const SheetForm = ({ onClose }: { onClose: () => void }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addSheet({ ...formData, id: Date.now().toString() });
-    onClose();
+    try {
+      await addSheet({ ...formData, id: Date.now().toString() });
+      toast.success('Chapa cadastrada com sucesso!');
+      onClose();
+    } catch(e: any) {
+      toast.error('Erro ao cadastrar chapa: ' + e.message);
+    }
   };
 
   const inputStyle = "w-full p-3 border border-slate-100 bg-slate-50/50 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-200 transition-all text-sm";

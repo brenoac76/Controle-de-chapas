@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStockState } from '../hooks/useStockState';
+import { toast } from './Toast';
 
 export const ClientForm = ({ onClose, initialClient, onDelete }: { onClose: () => void, initialClient?: {id: string, name: string, city?: string}, onDelete?: () => void }) => {
   const { addClient, updateClient } = useStockState();
@@ -8,12 +9,18 @@ export const ClientForm = ({ onClose, initialClient, onDelete }: { onClose: () =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (initialClient) {
-      await updateClient(initialClient.id, { name, city });
-    } else {
-      await addClient({ id: Date.now().toString(), name, city });
+    try {
+      if (initialClient) {
+        await updateClient(initialClient.id, { name, city });
+        toast.success('Cliente editado com sucesso!');
+      } else {
+        await addClient({ id: Date.now().toString(), name, city });
+        toast.success('Cliente cadastrado com sucesso!');
+      }
+      onClose();
+    } catch(e: any) {
+      toast.error('Erro ao salvar cliente: ' + e.message);
     }
-    onClose();
   };
 
   const inputStyle = "w-full p-3 border border-slate-100 bg-slate-50/50 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-200 transition-all text-sm";
@@ -29,9 +36,10 @@ export const ClientForm = ({ onClose, initialClient, onDelete }: { onClose: () =
             <button type="button" onClick={async () => { 
               try {
                 await onDelete(); 
+                toast.success('Cliente excluído com sucesso!');
                 onClose();
               } catch (e: any) {
-                alert(e.message);
+                toast.error(e.message);
               }
             }} className="bg-red-50 text-red-600 p-3 rounded-xl hover:bg-red-100 font-medium transition-colors">Excluir</button>
           )}

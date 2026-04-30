@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Transaction, Sheet, Client, Supplier } from '../types';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { toast } from './Toast';
 
 interface Props {
   transactions: Transaction[];
@@ -58,6 +59,8 @@ export const TransactionList = ({ transactions, sheets, clients, suppliers, onDe
                   <table className="w-full text-left text-sm min-w-[800px]">
                     <thead className="text-slate-400 font-bold uppercase text-xs">
                     <tr>
+                      <th className="px-4 py-2">Data</th>
+                      <th className="px-4 py-2">Usuário</th>
                       <th className="px-4 py-2">Chapa</th>
                       <th className="px-4 py-2">Pedido</th>
                       <th className="px-4 py-2">Tipo</th>
@@ -71,6 +74,12 @@ export const TransactionList = ({ transactions, sheets, clients, suppliers, onDe
                   <tbody className="divide-y divide-slate-100">
                     {dailyTrans.map(t => (
                       <tr key={t.id} className={`transition-colors rounded ${t.type === 'entry' ? 'bg-emerald-50/60 hover:bg-emerald-100/60' : t.type === 'exit' ? 'bg-orange-50/60 hover:bg-orange-100/60' : 'hover:bg-white bg-transparent'}`}>
+                        <td className="px-4 py-3 text-slate-700 text-xs">
+                          {new Date(t.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                        <td className="px-4 py-3 text-slate-700 font-medium">
+                          {t.userName || '-'}
+                        </td>
                         <td className="px-4 py-3 text-slate-800 font-medium">{getSheetNameWithThickness(t.sheetId)}</td>
                         <td className="px-4 py-3 text-slate-600 font-mono text-xs">
                           {t.orderNumber || '-'}
@@ -86,8 +95,9 @@ export const TransactionList = ({ transactions, sheets, clients, suppliers, onDe
                           <button onClick={async () => {
                             try {
                               await onDelete(t.id);
+                              toast.success('Movimentação excluída com sucesso!');
                             } catch (e: any) {
-                              alert(e.message);
+                              toast.error(e.message);
                             }
                           }} className="text-red-500 text-xs font-bold hover:text-red-600 transition-colors">Excluir</button>
                         </td>

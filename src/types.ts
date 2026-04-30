@@ -23,6 +23,14 @@ export interface Supplier {
   name: string;
 }
 
+export interface AppUser {
+  id: string;
+  name: string;
+  email: string;
+  active?: boolean;
+  role?: 'master' | 'operacional';
+}
+
 export interface Transaction {
   id: string;
   sheetId: string;
@@ -34,4 +42,6 @@ export interface Transaction {
   supplierId?: string;
   orderNumber?: string;
   notes?: string;
+  userId?: string;
+  userName?: string;
 }

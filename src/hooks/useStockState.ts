@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, addDoc, doc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { Sheet, Transaction, Client, Supplier } from '../types';
+import { collection, onSnapshot, addDoc, doc, updateDoc, increment, deleteDoc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { db, secondaryAuth } from '../lib/firebase';
+import { Sheet, Transaction, Client, Supplier, AppUser } from '../types';
 
 enum OperationType {
   CREATE = 'create',
@@ -20,6 +21,7 @@ export const useStockState = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [users, setUsers] = useState<AppUser[]>([]);
 
   useEffect(() => {
     const unsubSheets = onSnapshot(collection(db, 'sheets'), (snapshot) => {
@@ -34,12 +36,16 @@ export const useStockState = () => {
     const unsubSuppliers = onSnapshot(collection(db, 'suppliers'), (snapshot) => {
       setSuppliers(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Supplier)));
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'suppliers'));
+    const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+      setUsers(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as AppUser)));
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'users'));
 
     return () => {
       unsubSheets();
       unsubTransactions();
       unsubClients();
       unsubSuppliers();
+      unsubUsers();
     };
   }, []);
 
@@ -80,6 +86,45 @@ export const useStockState = () => {
     }
   };
 
+  const addUser = async (userData: any) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, userData.email, userData.password);
+      await secondaryAuth.signOut();
+      
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        name: userData.name,
+        email: userData.email,
+        role: userData.role || 'operacional',
+        active: true
+      });
+    } catch (error: any) {
+      if (error.code === 'auth/email-already-in-use') {
+        throw new Error('Este e-mail já está em uso.');
+      }
+      handleFirestoreError(error, OperationType.CREATE, 'users');
+    }
+  };
+
+  const updateUser = async (id: string, updates: Partial<AppUser>) => {
+    try {
+      await updateDoc(doc(db, 'users', id), updates);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'users');
+    }
+  };
+
+  const toggleUserActive = async (id: string, currentActive: boolean) => {
+    try {
+      await updateDoc(doc(db, 'users', id), { active: !currentActive });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'users');
+    }
+  };
+
+  const deleteUser = async (id: string) => {
+    await deleteDocument('users', id);
+  };
+
   const updateClient = async (id: string, updates: Partial<Client>) => {
     try {
       await updateDoc(doc(db, 'clients', id), updates);
@@ -105,9 +150,9 @@ export const useStockState = () => {
   };
 
   return { 
-    sheets, transactions, clients, suppliers, 
-    addSheet, addTransaction, addClient, addSupplier,
-    updateClient, updateSupplier,
+    sheets, transactions, clients, suppliers, users,
+    addSheet, addTransaction, addClient, addSupplier, addUser,
+    updateClient, updateSupplier, updateUser, toggleUserActive,
     deleteSheet: async (id: string) => {
       const relatedTransactions = transactions.filter(t => t.sheetId === id);
       if (relatedTransactions.length > 0) {
@@ -152,6 +197,7 @@ export const useStockState = () => {
         throw new Error('Não é possível excluir: existem movimentações vinculadas a este fornecedor.');
       }
       await deleteDocument('suppliers', id);
-    }
+    },
+    deleteUser
   };
 };

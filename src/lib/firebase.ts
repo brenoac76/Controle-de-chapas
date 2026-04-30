@@ -7,5 +7,8 @@ const app = initializeApp(firebaseConfig);
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true
 }, firebaseConfig.firestoreDatabaseId);
-export const auth = getAuth();
+export const auth = getAuth(app);
+
+const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+export const secondaryAuth = getAuth(secondaryApp);
 
