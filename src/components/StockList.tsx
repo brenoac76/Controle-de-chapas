@@ -4,7 +4,7 @@ import { getClientBalancesByOrder } from '../lib/stockUtils';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { PrintLabelModal } from './PrintLabelModal';
 
-const SheetDetails = ({ sheet, transactions, clients, suppliers, getClientName, getSupplierName, onPrintLabel, selectedLabels, onToggleLabel }: { sheet: Sheet, transactions: Transaction[], clients: Client[], suppliers: Supplier[], getClientName: (id?: string) => string, getSupplierName: (id?: string) => string, onPrintLabel: (data: any) => void, selectedLabels: any[], onToggleLabel: (data: any) => void }) => {
+const SheetDetails = ({ sheet, transactions, clients, suppliers, getClientName, getSupplierName, onPrintLabel, onAddToQueue }: { sheet: Sheet, transactions: Transaction[], clients: Client[], suppliers: Supplier[], getClientName: (id?: string) => string, getSupplierName: (id?: string) => string, onPrintLabel: (data: any[]) => void, onAddToQueue: (data: any) => void }) => {
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const balancesByOrder = getClientBalancesByOrder(sheet, transactions);
   
@@ -26,19 +26,19 @@ const SheetDetails = ({ sheet, transactions, clients, suppliers, getClientName, 
   }
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden my-2 mx-4 shadow-sm">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase text-xs">
+    <div className="bg-white rounded-lg border border-blue-200 overflow-hidden my-3 mx-4 shadow-md bg-blue-50/20">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm min-w-[600px]">
+          <thead className="bg-blue-50 border-b border-blue-100 text-blue-700 font-bold uppercase text-xs">
           <tr>
-            <th className="px-4 py-2 w-8"></th>
-            <th className="px-4 py-2 w-8"></th>
-            <th className="px-4 py-2">Cliente</th>
-            <th className="px-4 py-2">Pedido</th>
-            <th className="px-4 py-2">Estoque Atual</th>
-            <th className="px-4 py-2 text-right">Ações</th>
+            <th className="px-4 py-3 w-8"></th>
+            <th className="px-4 py-3">Cliente</th>
+            <th className="px-4 py-3">Pedido</th>
+            <th className="px-4 py-3">Estoque Atual</th>
+            <th className="px-4 py-3 text-right">Ações</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-blue-50">
           {clientOrderRows.map((row, index) => {
             const rowId = `${row.clientId}-${row.orderNumber}`;
             const clientTransactions = transactions.filter(t => 
@@ -56,52 +56,45 @@ const SheetDetails = ({ sheet, transactions, clients, suppliers, getClientName, 
               clientName: getClientName(row.clientId), 
               orderNumber: row.orderNumber 
             };
-            const isSelected = selectedLabels.some(l => l.sheetId === labelData.sheetId && l.clientId === labelData.clientId && l.orderNumber === labelData.orderNumber);
-
+            
             return (
               <React.Fragment key={rowId}>
-                <tr className="hover:bg-slate-50 cursor-pointer" onClick={() => setExpandedRowId(isExpanded ? null : rowId)}>
-                  <td className="px-4 py-2 text-slate-400">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" 
-                      onClick={(e) => e.stopPropagation()} 
-                      onChange={() => onToggleLabel(labelData)}
-                      checked={isSelected}
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-slate-400">
+                <tr className={`cursor-pointer transition-colors ${isExpanded ? 'bg-orange-100/80 relative shadow-sm z-10' : 'hover:bg-blue-50/50 bg-white border-b border-transparent'}`} onClick={() => setExpandedRowId(isExpanded ? null : rowId)}>
+                  <td className={`px-4 py-2 text-slate-400 ${isExpanded ? 'text-orange-600' : ''}`}>
                     {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                   </td>
-                  <td className="px-4 py-2 text-slate-700 font-medium">{getClientName(row.clientId)}</td>
-                  <td className="px-4 py-2 text-slate-500 font-mono text-xs">{row.orderNumber}</td>
-                  <td className="px-4 py-2 font-mono text-slate-700">{row.currentStock} unidades</td>
+                  <td className={`px-4 py-3 font-medium ${isExpanded ? 'text-orange-950 font-bold' : 'text-slate-700'}`}>{getClientName(row.clientId)}</td>
+                  <td className={`px-4 py-3 font-mono text-xs ${isExpanded ? 'text-orange-800 font-semibold' : 'text-slate-500'}`}>{row.orderNumber}</td>
+                  <td className={`px-4 py-3 font-mono ${isExpanded ? 'text-orange-900 font-bold' : 'text-slate-700'}`}>{row.currentStock} unidades</td>
                   <td className="px-4 py-2 text-right">
-                    <button 
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        onPrintLabel({ 
-                          sheetId: sheet.id,
-                          sheetName: sheet.name, 
-                          thickness: sheet.thickness, 
-                          material: sheet.material, 
-                          clientId: row.clientId, 
-                          clientName: getClientName(row.clientId), 
-                          orderNumber: row.orderNumber 
-                        }); 
-                      }} 
-                      className="text-blue-500 hover:text-blue-700 flex items-center justify-end gap-1 ml-auto"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
-                      <span className="text-xs font-bold uppercase tracking-wider">Etiqueta</span>
-                    </button>
+                    <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                      <button 
+                        onClick={() => onAddToQueue(labelData)}
+                        className="text-slate-500 hover:text-slate-700 flex items-center justify-end gap-1 bg-white px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors tooltip"
+                        title="Adicionar à fila de impressão"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                        <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">Fila</span>
+                      </button>
+                      <button 
+                        onClick={() => onPrintLabel([labelData])} 
+                        className="text-blue-500 hover:text-blue-700 flex items-center justify-end gap-1 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors tooltip"
+                        title="Imprimir agora"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+                        <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">Imprimir</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
                 {isExpanded && (
                   <tr>
-                    <td colSpan={6} className="bg-slate-50/50 p-4 border-t border-slate-100">
+                    <td colSpan={5} className="bg-orange-50/80 p-4 border-t border-orange-100">
                       {clientTransactions.length > 0 ? (
-                        <table className="w-full text-xs text-left">
-                          <thead>
-                            <tr className="text-slate-400 uppercase">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs text-left min-w-[500px]">
+                            <thead>
+                              <tr className="text-orange-900 uppercase font-bold">
                               <th className="pb-2 font-semibold">Data</th>
                               <th className="pb-2 font-semibold">Tipo</th>
                               <th className="pb-2 font-semibold">Quant.</th>
@@ -110,21 +103,22 @@ const SheetDetails = ({ sheet, transactions, clients, suppliers, getClientName, 
                               <th className="pb-2 font-semibold">Destino</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-100">
+                          <tbody className="divide-y divide-orange-100/50">
                             {clientTransactions.map(t => (
-                              <tr key={t.id} className="text-slate-600">
-                                <td className="py-2">{new Date(t.date).toLocaleDateString()}</td>
-                                <td className="py-2">{t.type === 'entry' ? 'Entrada' : t.type === 'exit' ? 'Saída' : 'Uso Parcial'}</td>
-                                <td className="py-2 font-mono">{t.quantity}</td>
-                                <td className="py-2">{getSupplierName(t.supplierId)}</td>
-                                <td className="py-2">{getClientName(t.sourceClientId)}</td>
-                                <td className="py-2">{getClientName(t.destinationClientId)}</td>
+                              <tr key={t.id} className="text-slate-800 hover:bg-orange-100/50 transition-colors">
+                                <td className="py-2 text-orange-950/70 font-medium">{new Date(t.date).toLocaleDateString()}</td>
+                                <td className={`py-2 font-bold ${t.type === 'entry' ? 'text-emerald-700' : t.type === 'exit' ? 'text-rose-700' : 'text-amber-700'}`}>{t.type === 'entry' ? 'Entrada' : t.type === 'exit' ? 'Saída' : 'Uso'}</td>
+                                <td className="py-2 font-mono font-bold text-orange-900">{t.quantity}</td>
+                                <td className="py-2 text-orange-900 font-medium">{getSupplierName(t.supplierId)}</td>
+                                <td className="py-2 text-orange-900 font-medium">{getClientName(t.sourceClientId)}</td>
+                                <td className="py-2 text-orange-900 font-medium">{getClientName(t.destinationClientId)}</td>
                               </tr>
                             ))}
                           </tbody>
-                        </table>
+                          </table>
+                        </div>
                       ) : (
-                        <div className="text-center text-slate-500 text-xs py-2">
+                        <div className="text-center text-orange-600 font-medium text-sm py-4 bg-white/50 rounded-lg border border-orange-100/50">
                           Nenhuma movimentação detalhada encontrada.
                         </div>
                       )}
@@ -135,7 +129,8 @@ const SheetDetails = ({ sheet, transactions, clients, suppliers, getClientName, 
             );
           })}
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   );
 };
@@ -152,17 +147,10 @@ interface Props {
 export const StockList = ({ sheets, transactions, clients, suppliers, onDeleteSheet, onDeleteTransaction }: Props) => {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [printLabels, setPrintLabels] = useState<any[] | null>(null);
-  const [selectedLabels, setSelectedLabels] = useState<any[]>([]);
+  const [printQueue, setPrintQueue] = useState<any[]>([]);
 
-  const handleToggleLabel = (data: any) => {
-    setSelectedLabels(prev => {
-        const isSelected = prev.some(l => l.sheetId === data.sheetId && l.clientId === data.clientId && l.orderNumber === data.orderNumber);
-        if (isSelected) {
-            return prev.filter(l => !(l.sheetId === data.sheetId && l.clientId === data.clientId && l.orderNumber === data.orderNumber));
-        } else {
-            return [...prev, data];
-        }
-    });
+  const handleAddToQueue = (data: any) => {
+    setPrintQueue(prev => [...prev, data]);
   };
 
   const getClientName = (id?: string) => clients.find(c => c.id === id)?.name || (id ? 'Desconhecido' : '-');
@@ -170,31 +158,10 @@ export const StockList = ({ sheets, transactions, clients, suppliers, onDeleteSh
 
   return (
     <>
-      {selectedLabels.length > 0 && (
-        <div className="mb-4 p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between">
-          <span className="text-blue-800 font-medium">
-            {selectedLabels.length} {selectedLabels.length === 1 ? 'etiqueta selecionada' : 'etiquetas selecionadas'}
-          </span>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setSelectedLabels([])}
-              className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button 
-              onClick={() => setPrintLabels(selectedLabels)}
-              className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex justify-center items-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
-              Imprimir Selecionadas
-            </button>
-          </div>
-        </div>
-      )}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[10px] font-bold text-slate-400 tracking-widest">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-16">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm min-w-[500px]">
+            <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[10px] font-bold text-slate-400 tracking-widest">
               <tr>
                 <th className="px-6 py-3">Nome</th>
                 <th className="px-6 py-3">Espessura</th>
@@ -207,17 +174,19 @@ export const StockList = ({ sheets, transactions, clients, suppliers, onDeleteSh
               const nameCmp = a.name.localeCompare(b.name);
               if (nameCmp !== 0) return nameCmp;
               return a.thickness - b.thickness;
-            }).map(sheet => (
+            }).map(sheet => {
+              const isExpanded = expandedRow === sheet.id;
+              return (
               <React.Fragment key={sheet.id}>
-                <tr key={sheet.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => setExpandedRow(expandedRow === sheet.id ? null : sheet.id)}>
-                  <td className="px-6 py-3 text-slate-800 font-semibold">{sheet.name}</td>
-                  <td className="px-6 py-3 text-slate-600">{sheet.thickness}mm</td>
-                  <td className="px-6 py-3 text-slate-600">{sheet.material}</td>
-                  <td className="px-6 py-3 font-mono">{sheet.quantity} unidades</td>
+                <tr className={`cursor-pointer transition-colors ${isExpanded ? 'bg-blue-100/90 hover:bg-blue-100 shadow-sm relative z-10' : 'hover:bg-slate-50'}`} onClick={() => setExpandedRow(isExpanded ? null : sheet.id)}>
+                  <td className={`px-6 py-3 font-semibold ${isExpanded ? 'text-blue-900 font-bold' : 'text-slate-800'}`}>{sheet.name}</td>
+                  <td className={`px-6 py-3 ${isExpanded ? 'text-blue-800 font-medium' : 'text-slate-600'}`}>{sheet.thickness}mm</td>
+                  <td className={`px-6 py-3 ${isExpanded ? 'text-blue-800 font-medium' : 'text-slate-600'}`}>{sheet.material}</td>
+                  <td className={`px-6 py-3 font-mono ${isExpanded ? 'text-blue-900 font-bold' : ''}`}>{sheet.quantity} unidades</td>
                 </tr>
-                {expandedRow === sheet.id && (
+                {isExpanded && (
                   <tr>
-                    <td colSpan={4} className="bg-slate-50/30 p-0 border-b border-slate-100">
+                    <td colSpan={4} className="bg-blue-50/60 p-0 border-b border-blue-200">
                       <SheetDetails 
                         sheet={sheet} 
                         transactions={transactions} 
@@ -225,22 +194,52 @@ export const StockList = ({ sheets, transactions, clients, suppliers, onDeleteSh
                         suppliers={suppliers} 
                         getClientName={getClientName} 
                         getSupplierName={getSupplierName} 
-                        onPrintLabel={(data) => setPrintLabels([data])}
-                        selectedLabels={selectedLabels}
-                        onToggleLabel={handleToggleLabel}
+                        onPrintLabel={(data) => setPrintLabels(data)}
+                        onAddToQueue={handleAddToQueue}
                       />
                     </td>
                   </tr>
                 )}
               </React.Fragment>
-            ))}
+              );
+            })}
           </tbody>
         </table>
+        </div>
       </div>
+
+      {/* Floating Print Queue Actions */}
+      {printQueue.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 z-50">
+          <div className="flex items-center gap-2">
+            <span className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">{printQueue.length}</span>
+            <span className="font-medium text-sm">na fila</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setPrintQueue([])}
+              className="text-slate-400 hover:text-white px-3 py-1.5 text-sm font-medium transition-colors"
+            >
+              Limpar
+            </button>
+            <button 
+              onClick={() => setPrintLabels(printQueue)}
+              className="bg-white text-slate-900 px-4 py-1.5 rounded-full text-sm font-bold hover:bg-slate-100 transition-colors flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+              Imprimir Fila
+            </button>
+          </div>
+        </div>
+      )}
+
       {printLabels && (
         <PrintLabelModal items={printLabels} onClose={() => {
+          // If we are printing the queue, empty the queue when we close the modal
+          if (printLabels === printQueue) {
+              setPrintQueue([]);
+          }
           setPrintLabels(null);
-          setSelectedLabels([]);
         }} />
       )}
     </>

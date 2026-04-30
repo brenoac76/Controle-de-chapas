@@ -117,34 +117,34 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
-      <nav className="w-64 bg-slate-900 text-white flex flex-col">
-        <div className="p-6">
+      <nav className="w-full md:w-64 bg-slate-900 text-white flex flex-col shrink-0">
+        <div className="p-4 md:p-6 flex justify-between items-center">
           <h1 className="text-lg font-bold uppercase tracking-tight">SteelFlow</h1>
         </div>
-        <div className="flex-1 px-4 space-y-1">
+        <div className="flex px-4 md:flex-col overflow-x-auto md:overflow-x-visible space-x-2 md:space-x-0 md:space-y-1 pb-4 md:pb-0 scrollbar-hide">
           {MENU_ITEMS.map((item) => (
             <button
               key={item.id}
               onClick={() => { setActiveView(item.id); setShowForm(null); }}
-              className={`flex items-center gap-3 w-full px-4 py-2 rounded-md text-sm font-medium ${activeView === item.id ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+              className={`flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-2 rounded-md text-xs md:text-sm font-medium whitespace-nowrap ${activeView === item.id ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
             >
-              <item.icon size={18} />
+              <item.icon size={16} className="md:w-[18px] md:h-[18px]" />
               <span>{item.name}</span>
             </button>
           ))}
         </div>
       </nav>
 
-      <main className="flex-1 flex flex-col">
-        <header className="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header className="h-auto md:h-16 bg-white border-b border-slate-200 px-4 md:px-8 py-4 md:py-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h1 className="text-sm font-bold text-slate-700">
             {MENU_ITEMS.find(m => m.id === activeView)?.name}
           </h1>
-          <div className='flex gap-2'>
+          <div className='flex gap-2 flex-wrap'>
             {getActionButtons()}
           </div>
         </header>
-        <div className="p-8">
+        <div className="p-4 md:p-8 overflow-y-auto">
           {renderContent()}
         </div>
       </main>

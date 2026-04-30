@@ -89,8 +89,9 @@ export const TransactionForm = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <div className="flex justify-between items-center">
+      <div className="max-w-xl mx-auto">
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div className="flex justify-between items-center">
           <h2 className="text-lg font-bold text-slate-800">Nova Movimentação</h2>
           <button type="button" onClick={() => setShowQRScanner(true)} className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
@@ -155,8 +156,12 @@ export const TransactionForm = ({ onClose }: { onClose: () => void }) => {
         {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
 
-      <button type="submit" className="w-full bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 font-medium transition-colors">Registrar</button>
+      <div className="flex gap-3 pt-2">
+        <button type="button" onClick={onClose} className="flex-1 bg-slate-100 text-slate-700 p-3 rounded-xl hover:bg-slate-200 font-medium transition-colors">Cancelar</button>
+        <button type="submit" className="flex-1 bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 font-medium transition-colors">Registrar</button>
+      </div>
       </form>
+      </div>
       {printData && (
         <PrintLabelModal items={[printData]} onClose={handlePrintClose} />
       )}

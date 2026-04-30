@@ -54,8 +54,9 @@ export const TransactionList = ({ transactions, sheets, clients, suppliers, onDe
 
             {expandedDates[date] && (
               <div className="bg-slate-50/50 p-4 border-t border-slate-100">
-                <table className="w-full text-left text-sm">
-                  <thead className="text-slate-400 font-bold uppercase text-xs">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm min-w-[800px]">
+                    <thead className="text-slate-400 font-bold uppercase text-xs">
                     <tr>
                       <th className="px-4 py-2">Chapa</th>
                       <th className="px-4 py-2">Pedido</th>
@@ -69,12 +70,12 @@ export const TransactionList = ({ transactions, sheets, clients, suppliers, onDe
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {dailyTrans.map(t => (
-                      <tr key={t.id} className="hover:bg-white transition-colors bg-transparent rounded">
+                      <tr key={t.id} className={`transition-colors rounded ${t.type === 'entry' ? 'bg-emerald-50/60 hover:bg-emerald-100/60' : t.type === 'exit' ? 'bg-orange-50/60 hover:bg-orange-100/60' : 'hover:bg-white bg-transparent'}`}>
                         <td className="px-4 py-3 text-slate-800 font-medium">{getSheetNameWithThickness(t.sheetId)}</td>
                         <td className="px-4 py-3 text-slate-600 font-mono text-xs">
                           {t.orderNumber || '-'}
                         </td>
-                        <td className="px-4 py-3 text-slate-600">
+                        <td className={`px-4 py-3 font-medium ${t.type === 'entry' ? 'text-emerald-700' : t.type === 'exit' ? 'text-orange-700' : 'text-amber-700'}`}>
                           {t.type === 'entry' ? 'Entrada' : t.type === 'exit' ? 'Saída' : 'Uso Parcial'}
                         </td>
                         <td className="px-4 py-3 font-mono text-slate-700">{t.quantity}</td>
@@ -87,7 +88,8 @@ export const TransactionList = ({ transactions, sheets, clients, suppliers, onDe
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                  </table>
+                </div>
               </div>
             )}
           </div>
